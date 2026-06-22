@@ -4,6 +4,7 @@
 //! 已迁移到新架构的 checker 直接在这里调用，未迁移的暂时注释。
 
 // ✅ 已迁移 (new model)
+pub(crate) mod assign_type_mismatch;
 pub(crate) mod access_invisible;
 pub(crate) mod await_in_sync;
 pub(crate) mod code_style;
@@ -41,7 +42,6 @@ pub(crate) mod unnecessary_if;
 pub(crate) mod unused;
 
 // ⏳ 待迁移 (Checker trait bridge)
-mod assign_type_mismatch;
 mod attribute_check;
 // mod check_export; // needs check_field::is_valid_member (old API)
 // mod check_param_count; // migrated
@@ -212,7 +212,6 @@ duplicate_type::check(context, model);
             let old_model = crate::semantic::SemanticModel::new(
                 model.get_file_id(), context.db, cache, model.get_emmyrc_arc(), tree.get_chunk_node(),
             );
-            run_check::<assign_type_mismatch::AssignTypeMismatchChecker>(context, &old_model);
             run_check::<attribute_check::AttributeCheckChecker>(context, &old_model);
             // check_param_count migrated to new model
             run_check::<code_style::preferred_local_alias::PreferredLocalAliasChecker>(context, &old_model);
@@ -243,11 +242,13 @@ duplicate_type::check(context, model);
     // check_param_count::check(context, model);
     // duplicate_field::check(context, model);
 cast_type_mismatch::check(context, model);
+assign_type_mismatch::check(context, model);
     missing_fields::check(context, model);
 enum_value_mismatch::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
+assign_type_mismatch::check(context, model);
     // unknown_doc_tag::check(context, model);
     // type_access_modifier::check(context, model);
     // enum_value_mismatch::check(context, model);
@@ -269,11 +270,13 @@ duplicate_type::check(context, model);
     // check_param_count::check(context, model);
     // duplicate_field::check(context, model);
 cast_type_mismatch::check(context, model);
+assign_type_mismatch::check(context, model);
     missing_fields::check(context, model);
 enum_value_mismatch::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
+assign_type_mismatch::check(context, model);
     // unknown_doc_tag::check(context, model);
     // type_access_modifier::check(context, model);
     // enum_value_mismatch::check(context, model);
