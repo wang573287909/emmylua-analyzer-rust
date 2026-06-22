@@ -13,6 +13,7 @@ pub(crate) mod check_field;
 pub(crate) mod check_param_count;
 pub(crate) mod check_return_count;
 pub(crate) mod circle_doc_class;
+pub(crate) mod duplicate_type;
 pub(crate) mod duplicate_index;
 pub(crate) mod global_non_module;
 pub(crate) mod incomplete_signature_doc;
@@ -41,11 +42,9 @@ mod cast_type_mismatch;
 // mod check_export; // needs check_field::is_valid_member (old API)
 // mod check_param_count; // migrated
 mod duplicate_field;
-mod duplicate_type;
 mod enum_value_mismatch;
 mod generic;
 mod missing_fields;
-mod require_module_visibility;
 mod type_access_modifier;
 
 use emmylua_parser::{LuaAstNode, LuaClosureExpr, LuaComment, LuaReturnStat, LuaStat, LuaSyntaxKind};
@@ -201,6 +200,7 @@ pub fn check_file(
     circle_doc_class::check(context, model);
     deprecated::check(context, model);
 global_non_module::check(context, model);
+duplicate_type::check(context, model);
     incomplete_signature_doc::check(context, model);
     param_type_check::check(context, model);
     return_type_mismatch::check(context, model);
@@ -218,11 +218,9 @@ global_non_module::check(context, model);
             // check_param_count migrated to new model
             run_check::<code_style::preferred_local_alias::PreferredLocalAliasChecker>(context, &old_model);
             run_check::<duplicate_field::DuplicateFieldChecker>(context, &old_model);
-            run_check::<duplicate_type::DuplicateTypeChecker>(context, &old_model);
             run_check::<enum_value_mismatch::EnumValueMismatchChecker>(context, &old_model);
             run_check::<generic::generic_constraint_mismatch::GenericConstraintMismatchChecker>(context, &old_model);
             run_check::<missing_fields::MissingFieldsChecker>(context, &old_model);
-            run_check::<require_module_visibility::RequireModuleVisibilityChecker>(context, &old_model);
             run_check::<type_access_modifier::InconsistentTypeAccessModifierChecker>(context, &old_model);
         }
     }
@@ -252,7 +250,6 @@ global_non_module::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
-    // require_module_visibility::check(context, model);
     // unknown_doc_tag::check(context, model);
     // type_access_modifier::check(context, model);
     // enum_value_mismatch::check(context, model);
@@ -261,6 +258,7 @@ global_non_module::check(context, model);
     // code_style::invert_if::check(context, model);
     // readonly_check::check(context, model);
     // global_non_module::check(context, model);
+duplicate_type::check(context, model);
     // check_export::check(context, model);
     // check_field::check(context, model);
     // circle_doc_class::check(context, model);
@@ -275,7 +273,6 @@ global_non_module::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
-    // require_module_visibility::check(context, model);
     // unknown_doc_tag::check(context, model);
     // type_access_modifier::check(context, model);
     // enum_value_mismatch::check(context, model);
@@ -285,6 +282,7 @@ global_non_module::check(context, model);
     // code_style::invert_if::check(context, model);
     // readonly_check::check(context, model);
     // global_non_module::check(context, model);
+duplicate_type::check(context, model);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

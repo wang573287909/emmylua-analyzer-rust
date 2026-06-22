@@ -28,7 +28,7 @@ use crate::compilation::{
     SalsaDeclId, SalsaDeclTreeSummary, SalsaDocOwnerKindSummary, SalsaDocOwnerSummary,
     SalsaDocTagPropertyEntrySummary, SalsaDocTypeDefKindSummary, SalsaDocVisibilityKindSummary,
     SalsaNameUseSummary, SalsaPropertyKeySummary, SalsaSignatureExplainSummary,
-    SalsaSignatureIndexSummary, SalsaSummaryDatabase,
+    SalsaSignatureIndexSummary, SalsaSummaryDatabase, TypeDefEntry,
 };
 use crate::{
     Emmyrc, FileId, LuaDocument, LuaMemberKey, LuaSemanticDeclId, LuaType, LuaTypeDeclId,
@@ -277,6 +277,58 @@ impl SemanticModel {
         db.doc()
             .type_def_by_name(self.file_id, type_id.get_name())
             .is_some_and(|def| matches!(def.kind, SalsaDocTypeDefKindSummary::Class))
+    }
+
+    /// 获取类型定义信息（class/enum/alias），跨文件查找。
+    pub fn get_type_def(&self, name: &str) -> Option<crate::compilation::SalsaDocTypeDefSummary> {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        // Try current file first, then scan all files
+        if let Some(def) = db.doc().type_def_by_name(self.file_id, name) {
+            return Some(def);
+        }
+        for fid in db.file_ids() {
+            if let Some(def) = db.doc().type_def_by_name(fid, name) {
+                return Some(def);
+            }
+        }
+        None
+    }
+
+    /// 统计使用某类型名的文件数（用于 duplicate type 检测），O(1)。
+    pub fn count_type_def_files(&self, name: &str) -> usize {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        db.semantic().type_index()
+            .map(|idx| idx.count_files(name))
+            .unwrap_or(0)
+    }
+
+    /// 获取类型的所有跨文件定义条目。
+    pub fn type_def_entries(&self, name: &str) -> Option<Vec<TypeDefEntry>> {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        db.semantic().type_index()
+            .and_then(|idx| idx.find(name).map(|e| e.to_vec()))
+    }
+
+    /// 判断类型是否 alias。
+    pub fn is_alias_type(&self, type_id: &LuaTypeDeclId) -> bool {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        db.doc()
+            .type_def_by_name(self.file_id, type_id.get_name())
+            .is_some_and(|def| matches!(def.kind, SalsaDocTypeDefKindSummary::Alias))
+    }
+
+    /// 获取声明的所有 doc tag 属性（visibility, deprecated, readonly 等）。
+    pub fn get_doc_properties(
+        &self,
+        file_id: FileId,
+        offset: TextSize,
+    ) -> Option<crate::compilation::SalsaDocTagPropertySummary> {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        let owner = SalsaDocOwnerSummary {
+            kind: SalsaDocOwnerKindSummary::None,
+            syntax_offset: Some(offset),
+        };
+        db.doc().tag_property(file_id, owner)
     }
 
     /// 检查声明是否有指定的 doc tag 属性。

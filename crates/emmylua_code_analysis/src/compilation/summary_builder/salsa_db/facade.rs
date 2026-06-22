@@ -41,7 +41,8 @@ use crate::{
     SalsaSignatureGenericParamLookupSummary, SalsaSignatureIndexSummary,
     SalsaSignatureReturnQueryIndex, SalsaSignatureReturnQuerySummary,
     SalsaSingleFileSemanticSummary, SalsaSyntaxIdSummary, SalsaTableShapeIndexSummary,
-    SalsaTableShapeSummary, SalsaUseSiteIndexSummary, WorkspaceMemberIndex, WorkspacePropertyEntry,
+    SalsaTableShapeSummary, TypeDefEntry, SalsaUseSiteIndexSummary, WorkspaceMemberIndex,
+    WorkspacePropertyEntry, WorkspaceTypeIndex,
 };
 use smol_str::SmolStr;
 
@@ -837,6 +838,33 @@ impl<'db> SalsaSummarySemanticQueries<'db> {
             .find(|(n, _)| n.as_str() == type_name)
             .map(|(_, e)| e.clone())
     }
+
+    /// 工作区级类型索引（type_name → 所有定义位置）。
+    pub fn type_index(&self) -> Option<Arc<WorkspaceTypeIndex>> {
+        let file_list = self.db.file_list_input()?;
+        let mut by_name: Vec<(SmolStr, Vec<TypeDefEntry>)> = Vec::new();
+        for file_id in &file_list.file_ids(self.db) {
+            let Some(doc) = self.db.doc().summary(*file_id) else { continue };
+            for td in &doc.type_defs {
+                let entry = TypeDefEntry {
+                    file_id: *file_id,
+                    name: td.name.clone(),
+                    kind: td.kind.clone(),
+                    visibility: td.visibility.clone(),
+                    syntax_offset: td.syntax_offset,
+                };
+                if let Some((_, existing)) = by_name.iter_mut().find(|(n, _)| n == &td.name) {
+                    if !existing.iter().any(|e| e.file_id == entry.file_id && e.syntax_offset == entry.syntax_offset) {
+                        existing.push(entry);
+                    }
+                } else {
+                    by_name.push((td.name.clone(), vec![entry]));
+                }
+            }
+        }
+        if by_name.is_empty() { None } else { Some(Arc::new(WorkspaceTypeIndex { by_name })) }
+    }
+
 }
 
 #[derive(Clone, Copy)]

@@ -11,6 +11,7 @@ mod semantic_graph;
 mod semantic_solver;
 mod signature;
 mod table_shape;
+mod type_def;
 mod use_site;
 
 pub use decl::{
@@ -54,6 +55,7 @@ pub use member::{
     SalsaMemberPathSummary, SalsaMemberRootSummary, SalsaMemberSummary, SalsaMemberTargetId,
     SalsaMemberTargetSummary, WorkspaceMemberIndex, WorkspacePropertyEntry,
 };
+pub use type_def::{TypeDefEntry, WorkspaceTypeIndex};
 pub use module::{
     SalsaExportTargetSummary, SalsaModuleExportQuerySummary, SalsaModuleExportResolveStateSummary,
     SalsaModuleExportSummary, SalsaModuleSummary,
