@@ -322,6 +322,8 @@ impl SemanticModel {
             .unwrap_or_default()
     }
 
+    /// 解析 doc type 为 LuaType（salsa-native infer_doc_type 等价）。
+
     /// 获取成员属性条目（包含类型信息）。
     pub fn get_property_entries(&self, type_name: &str) -> Option<Vec<crate::compilation::WorkspacePropertyEntry>> {
         let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());

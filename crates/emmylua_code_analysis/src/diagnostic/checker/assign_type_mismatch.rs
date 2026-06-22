@@ -45,7 +45,8 @@ fn check_local(context: &mut DiagnosticContext, model: &SemanticModel, local: &L
     let Ok(value_types) = model.infer_expr_list_types(&exprs, Some(names.len())) else { return };
     for (idx, name) in names.iter().enumerate() {
         let Some(val) = value_types.get(idx).map(|(t, _)| t.clone()) else { continue };
-        let Ok(target) = model.infer_expr(LuaExpr::NameExpr(emmylua_parser::LuaNameExpr::cast(name.syntax().clone()).unwrap())) else { continue };
+        let Some(target_name) = emmylua_parser::LuaNameExpr::cast(name.syntax().clone()) else { continue };
+        let Ok(target) = model.infer_expr(LuaExpr::NameExpr(target_name)) else { continue };
         let Some(nk) = name.get_name_token() else { continue };
         check_mismatch(context, nk.get_range(), &val, &target);
     }
