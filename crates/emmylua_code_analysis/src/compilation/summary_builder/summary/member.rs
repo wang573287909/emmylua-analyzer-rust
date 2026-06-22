@@ -261,11 +261,22 @@ pub struct SalsaMemberIndexSummary {
 pub struct WorkspacePropertyEntry {
     pub file_id: FileId,
     pub key: super::SalsaPropertyKeySummary,
+    /// doc type node key — 用于 resolve 值类型
+    pub doc_type_offset: Option<super::SalsaDocTypeNodeKey>,
+    pub is_nullable: bool,
+    /// 属性来源：TableField / DocField
+    pub source: super::SalsaPropertySourceSummary,
+    pub kind: super::SalsaPropertyKindSummary,
 }
 
 /// 跨文件成员索引：type_name → 所有文件中的属性定义。
-/// 在 workspace 层面聚合，通过 salsa tracked function 生成并缓存。
 #[derive(Debug, Clone, PartialEq, Eq, salsa::Update)]
 pub struct WorkspaceMemberIndex {
     pub by_type: Vec<(SmolStr, Vec<WorkspacePropertyEntry>)>,
+}
+
+impl WorkspaceMemberIndex {
+    pub fn find(&self, type_name: &str) -> Option<&[WorkspacePropertyEntry]> {
+        self.by_type.iter().find(|(n, _)| n.as_str() == type_name).map(|(_, e)| e.as_slice())
+    }
 }

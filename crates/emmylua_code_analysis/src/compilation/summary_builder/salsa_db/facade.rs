@@ -819,7 +819,13 @@ impl<'db> SalsaSummarySemanticQueries<'db> {
                     SalsaPropertyOwnerSummary::Decl { name, .. } => name.clone(),
                     _ => continue,
                 };
-                let entry = WorkspacePropertyEntry { file_id: *file_id, key: prop.key.clone() };
+                let entry = WorkspacePropertyEntry {
+                    file_id: *file_id, key: prop.key.clone(),
+                    doc_type_offset: prop.doc_type_offset,
+                    is_nullable: prop.is_nullable,
+                    source: prop.source.clone(),
+                    kind: prop.kind.clone(),
+                };
                 if let Some((_, existing)) = by_type.iter_mut().find(|(n, _)| n == &type_name) {
                     if !existing.iter().any(|e| e.key == entry.key && e.file_id == entry.file_id) {
                         existing.push(entry);
@@ -843,9 +849,12 @@ impl<'db> SalsaSummarySemanticQueries<'db> {
     pub fn type_index(&self) -> Option<Arc<WorkspaceTypeIndex>> {
         let file_list = self.db.file_list_input()?;
         let mut by_name: Vec<(SmolStr, Vec<TypeDefEntry>)> = Vec::new();
+        let mut by_file: Vec<(FileId, Vec<SmolStr>)> = Vec::new();
         for file_id in &file_list.file_ids(self.db) {
             let Some(doc) = self.db.doc().summary(*file_id) else { continue };
+            let mut file_type_names: Vec<SmolStr> = Vec::new();
             for td in &doc.type_defs {
+                file_type_names.push(td.name.clone());
                 let entry = TypeDefEntry {
                     file_id: *file_id,
                     name: td.name.clone(),
@@ -861,8 +870,11 @@ impl<'db> SalsaSummarySemanticQueries<'db> {
                     by_name.push((td.name.clone(), vec![entry]));
                 }
             }
+            if !file_type_names.is_empty() {
+                by_file.push((*file_id, file_type_names));
+            }
         }
-        if by_name.is_empty() { None } else { Some(Arc::new(WorkspaceTypeIndex { by_name })) }
+        if by_name.is_empty() { None } else { Some(Arc::new(WorkspaceTypeIndex { by_name, by_file })) }
     }
 
 }

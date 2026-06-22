@@ -309,6 +309,21 @@ impl SemanticModel {
             .and_then(|idx| idx.find(name).map(|e| e.to_vec()))
     }
 
+    /// 获取当前文件中定义的所有类型名。
+    pub fn file_type_names(&self) -> Vec<String> {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        db.semantic().type_index()
+            .map(|idx| idx.find_by_file(self.file_id).iter().map(|s| s.to_string()).collect())
+            .unwrap_or_default()
+    }
+
+    /// 获取成员属性条目（包含类型信息）。
+    pub fn get_property_entries(&self, type_name: &str) -> Option<Vec<crate::compilation::WorkspacePropertyEntry>> {
+        let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
+        db.semantic().member_index()
+            .and_then(|idx| idx.find(type_name).map(|e| e.to_vec()))
+    }
+
     /// 判断类型是否 alias。
     pub fn is_alias_type(&self, type_id: &LuaTypeDeclId) -> bool {
         let db = self.salsa_db.read().unwrap_or_else(|e| e.into_inner());
