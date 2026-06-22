@@ -27,6 +27,9 @@ pub(crate) mod return_type_mismatch;
 pub(crate) mod param_type_check;
 pub(crate) mod undefined_doc_param;
 pub(crate) mod redefined_local;
+pub(crate) mod enum_value_mismatch;
+pub(crate) mod duplicate_field;
+pub(crate) mod type_access_modifier;
 pub(crate) mod syntax_error;
 pub(crate) mod unbalanced_assignments;
 pub(crate) mod undefined_global;
@@ -41,11 +44,8 @@ mod attribute_check;
 mod cast_type_mismatch;
 // mod check_export; // needs check_field::is_valid_member (old API)
 // mod check_param_count; // migrated
-mod duplicate_field;
-mod enum_value_mismatch;
 mod generic;
 mod missing_fields;
-mod type_access_modifier;
 
 use emmylua_parser::{LuaAstNode, LuaClosureExpr, LuaComment, LuaReturnStat, LuaStat, LuaSyntaxKind};
 use lsp_types::{Diagnostic, DiagnosticSeverity, DiagnosticTag, NumberOrString};
@@ -217,11 +217,8 @@ duplicate_type::check(context, model);
             run_check::<cast_type_mismatch::CastTypeMismatchChecker>(context, &old_model);
             // check_param_count migrated to new model
             run_check::<code_style::preferred_local_alias::PreferredLocalAliasChecker>(context, &old_model);
-            run_check::<duplicate_field::DuplicateFieldChecker>(context, &old_model);
-            run_check::<enum_value_mismatch::EnumValueMismatchChecker>(context, &old_model);
             run_check::<generic::generic_constraint_mismatch::GenericConstraintMismatchChecker>(context, &old_model);
             run_check::<missing_fields::MissingFieldsChecker>(context, &old_model);
-            run_check::<type_access_modifier::InconsistentTypeAccessModifierChecker>(context, &old_model);
         }
     }
 
@@ -247,6 +244,7 @@ duplicate_type::check(context, model);
     // unbalanced_assignments::check(context, model);
     // check_param_count::check(context, model);
     // duplicate_field::check(context, model);
+enum_value_mismatch::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
@@ -270,6 +268,7 @@ duplicate_type::check(context, model);
     // unbalanced_assignments::check(context, model);
     // check_param_count::check(context, model);
     // duplicate_field::check(context, model);
+enum_value_mismatch::check(context, model);
     // duplicate_index::check(context, model);
     // generic::generic_constraint_mismatch::check(context, model);
     // cast_type_mismatch::check(context, model);
