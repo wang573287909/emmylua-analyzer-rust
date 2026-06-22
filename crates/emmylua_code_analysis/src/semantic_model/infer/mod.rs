@@ -175,10 +175,12 @@ impl<'a> InferQuery<'a> {
         Ok(value_types)
     }
 
+    /// 推断表应该符合的目标类型（如 `@type` 标注）。
+    pub fn infer_table_should_be(&self, _table_expr: emmylua_parser::LuaTableExpr) -> Option<LuaType> {
+        None // TODO: implement via salsa type annotation lookup
+    }
+
     /// 推断值绑定的目标类型（右值 → 左值类型推断）。
-    ///
-    /// 例如 `local x: number = expr` 中，从 `expr` 推断 `x` 的类型为 `number`。
-    /// 当前仅实现赋值语句场景，其余返回 `None`。
     pub fn infer_bind_value_type(&self, _expr: LuaExpr) -> Option<LuaType> {
         // TODO: 完整实现需要 parent node 检查
         // - LuaAssignStat: 找到对应的 var，推断 var 的类型

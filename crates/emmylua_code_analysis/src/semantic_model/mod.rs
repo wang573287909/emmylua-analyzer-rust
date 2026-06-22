@@ -159,6 +159,11 @@ impl SemanticModel {
         self.infer().infer_expr_list_types(exprs, var_count)
     }
 
+    /// 推断表应该符合的目标类型。
+    pub fn infer_table_should_be(&self, expr: emmylua_parser::LuaTableExpr) -> Option<LuaType> {
+        self.infer().infer_table_should_be(expr)
+    }
+
     /// 推断值绑定的目标类型。
     pub fn infer_bind_value_type(&self, expr: LuaExpr) -> Option<LuaType> {
         self.infer().infer_bind_value_type(expr)
