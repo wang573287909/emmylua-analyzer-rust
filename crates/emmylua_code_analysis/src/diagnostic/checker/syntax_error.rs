@@ -142,13 +142,11 @@ fn check_dots(context: &mut DiagnosticContext, model: &SemanticModel, dots_token
     let Some(closure) = literal.ancestors::<LuaClosureExpr>().next() else {
         return;
     };
-    let sig_id = LuaSignatureId::from_closure(model.get_file_id(), &closure);
-    // TODO: salsa-native signature lookup (后续迁移 SignatureIndex 时完成)
-    // 当前暂时使用 DbIndex 的 signature index
-    let Some(signature) = context.db.get_signature_index().get(&sig_id) else {
-        return;
-    };
-    if !signature.params.iter().any(|p| p == "...") {
+    let file_id = model.get_file_id();
+    let sig_id = LuaSignatureId::from_closure(file_id, &closure);
+    let is_vararg = model.get_signature(file_id, sig_id.get_position())
+        .is_some_and(|s| s.is_variadic());
+    if !is_vararg {
         context.add_diagnostic(
             DiagnosticCode::SyntaxError,
             literal.get_range(),
